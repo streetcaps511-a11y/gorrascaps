@@ -55,6 +55,11 @@ const Compra = sequelize.define('Compra', {
         type: DataTypes.DATEONLY,
         allowNull: true,
         field: 'FechaRegistro'
+    },
+    noCompra: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        field: 'NoCompra'
     }
 }, {
     tableName: 'Compras',

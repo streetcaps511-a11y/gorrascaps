@@ -93,6 +93,7 @@ const productoController = {
                 return {
                     ...productPlain,
                     id_producto: productPlain.id,
+                    id_producto_ref: productPlain.id_producto_ref,
                     stock: currentStock,
                     precio_normal: productPlain.precioVenta,
                     precio_descuento: productPlain.precioOferta,
@@ -128,8 +129,19 @@ const productoController = {
                 }
             });
         } catch (error) {
-            console.error('❌ Error en getAllProductos:', error);
-            res.status(500).json({ success: false, message: error.message });
+            console.error('❌ Error en getAllProductos:', error.message);
+            console.error(error.stack);
+            if (error.original) {
+                console.error('❌ Error original PostgreSQL:', {
+                    message: error.original.message,
+                    detail: error.original.detail,
+                    constraint: error.original.constraint,
+                    column: error.original.column,
+                    table: error.original.table,
+                    code: error.original.code,
+                });
+            }
+            res.status(500).json({ success: false, message: 'Error interno al obtener productos' });
         }
     },
 
@@ -257,6 +269,7 @@ const productoController = {
             }
 
             // Forzar booleanos correctamente para Sequelize (Mayúsculas)
+            if (req.body.id_producto_ref !== undefined) sanitizedData.id_producto_ref = req.body.id_producto_ref;
             if (req.body.enInventario !== undefined) sanitizedData.enInventario = req.body.enInventario;
             if (req.body.isActive !== undefined) sanitizedData.isActive = req.body.isActive;
 

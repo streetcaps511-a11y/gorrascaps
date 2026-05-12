@@ -19,25 +19,29 @@
 
 .gm-toast-top {
   position: fixed; 
-  top: 0; 
-  left: 50%;
-  transform: translateX(-50%);
-  right: auto;
-  border-radius: 0 0 12px 12px; 
+  top: 100px; 
+  right: 20px;
+  left: auto;
+  transform: none;
+  border-radius: 12px; 
   font-weight: 700; 
   z-index: 10001; 
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  padding: 12px 20px;
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 193, 7, 0.3);
   letter-spacing: 0.3px;
-  animation: slideInToastRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInToastRight 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 @keyframes slideInToastRight {
-  from { transform: translateX(100%); opacity: 0; }
+  from { transform: translateX(120%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
 

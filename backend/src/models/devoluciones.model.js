@@ -127,6 +127,11 @@ const Devolucion = sequelize.define('Devolucion', {
         type: DataTypes.STRING(100),
         allowNull: true,
         field: 'idLote'
+    },
+    noDevolucion: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        field: 'NoDevolucion'
     }
 }, {
     tableName: 'Devoluciones',

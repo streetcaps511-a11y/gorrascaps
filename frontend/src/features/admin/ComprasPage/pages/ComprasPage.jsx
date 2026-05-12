@@ -45,7 +45,8 @@ const ComprasPage = () => {
   } = useComprasLogic(location);
 
   const columns = [
-    { header: 'N° Factura', field: 'numeroRecibo', width: '160px',  render: (item) => <span style={{ fontWeight: '600' }}>{item.numeroRecibo || item.numCompra || '-'}</span> },
+    { header: 'No. Compra', field: 'numCompra', width: '130px', render: (item) => <span style={{ fontWeight: '600' }}>{item.numCompra}</span> },
+    { header: 'N° Factura', field: 'numeroRecibo', width: '160px',  render: (item) => <span style={{ fontWeight: '600' }}>{item.numeroRecibo || '-'}</span> },
     { header: 'Proveedor',field: 'proveedor', width: '200px', render: (item) => <span style={{ fontWeight: '600' }}>{item.proveedor}</span> },
     { header: 'Fecha',    field: 'fecha',     width: '100px', render: (item) => <span>{item.fecha}</span> },
     { header: 'Total',    field: 'total',     width: '120px', render: (item) => <span style={{ color: '#10B981', fontWeight: '700', fontSize: '14px' }}>${Number(item.total).toLocaleString('es-CO')}</span> },

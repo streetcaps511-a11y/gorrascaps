@@ -415,7 +415,7 @@ export const useComprasLogic = (location) => {
 
   const filtered = useMemo(() => {
     return compras.filter(c => {
-      const search = (c.proveedor + c.id).toLowerCase().includes(searchTerm.toLowerCase());
+      const search = (c.proveedor + c.id + c.numCompra).toLowerCase().includes(searchTerm.toLowerCase());
       const status = filterStatus === 'Todos' || c.estado === filterStatus.slice(0, -1) || c.estado === filterStatus;
       
       let matchDate = true;

@@ -71,6 +71,7 @@ export const mapBackendToFrontend = (v) => {
 
     return {
       id: v.id || v.IdVenta || Math.random(),
+      noVenta: v.noVenta || v.NoVenta || (99 + (v.id || v.IdVenta)),
       cliente: getClienteInfo(),
       idCliente: v.idCliente || v.IdCliente,
       fecha: (v.fecha || v.Fecha) ? new Date(v.fecha || v.Fecha).toLocaleDateString('es-CO') : '',

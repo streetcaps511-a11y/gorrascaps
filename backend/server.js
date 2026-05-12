@@ -42,6 +42,8 @@ const startServer = async () => {
 
             // 🚀 MIGRACIÓN PARA PRODUCTOS (BORRADO LÓGICO)
             await sequelize.query('ALTER TABLE "Productos" ADD COLUMN IF NOT EXISTS "DeletedAt" TIMESTAMP WITH TIME ZONE');
+            // Asegurar columna de referencia externa (IdProductoRef) para compatibilidad con modelos antiguos
+            await sequelize.query('ALTER TABLE "Productos" ADD COLUMN IF NOT EXISTS "IdProductoRef" BIGINT');
 
         } catch (e) {
             console.warn('⚠️ No se pudieron añadir columnas extra a Ventas:', e.message);
@@ -148,3 +150,14 @@ const gracefulShutdown = async (signal) => {
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2'));
+
+// Manejadores globales para ayudar a diagnosticar crashes inesperados
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❗ Unhandled Rejection at:', promise, '\nReason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('❗ Uncaught Exception:', err && err.stack ? err.stack : err);
+  // No forzamos exit inmediato aquí para permitir ver el stack en desarrollo;
+  // nodemon reiniciará el proceso si falla posteriormente.
+});

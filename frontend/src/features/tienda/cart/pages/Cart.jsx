@@ -112,26 +112,12 @@ const Cart = () => {
   // Renderizado: Carrito vacío
   if (cartItems.length === 0) {
     return (
-      <div className="page-container" style={{ minHeight: '100vh', position: 'relative' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '30px 20px 0', textAlign: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '6px' }}>
-            <FaShoppingCart style={{ color: '#F5C81B', fontSize: '26px' }} />
-            <h1 style={{ color: '#FFFFFF', fontSize: '26px', fontWeight: '800', margin: 0 }}>Carrito de Compras</h1>
-          </div>
-          <p style={{ color: '#94a3b8', fontSize: '15px', margin: '0' }}>Administra tus productos y avanza en tu compra</p>
-        </div>
-
-        <div style={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          padding: '40px 20px'
-        }}>
+      <div className="page-container" style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#030712' }}>
+        <CartHero />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', padding: '60px 20px', position: 'relative', zIndex: 2 }}>
           <div style={{
             textAlign: 'center',
-            padding: '30px 20px',
+            padding: '20px',
             maxWidth: '500px',
             width: '100%'
           }}>
@@ -348,43 +334,34 @@ const Cart = () => {
                       onClick={() => setSelectedDetailProduct(item)}
                     />
 
-                    {/* Info + controles en una sola fila */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-
-                      {/* Nombre + badges */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Info + controles - RESPONSIVE via CSS */}
+                    <div className="gm-cart-item-info-responsive">
+                      
+                      {/* Bloque Nombre + Categoría */}
+                      <div className="gm-cart-item-info-text">
                         <h3 
-                          style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                          className="gm-cart-item-name"
                           onClick={() => setSelectedDetailProduct(item)}
                         >
                           {productName}
                         </h3>
-                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'nowrap', overflow: 'hidden', alignItems: 'center' }}>
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.22)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        <div className="gm-cart-item-badges">
+                          <span className="gm-cart-badge category">
                             {getProductCategory(item)}
                           </span>
                           {item.talla && (
-                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.22)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <span className="gm-cart-badge size">
                               Talla: {item.talla}
-                            </span>
-                          )}
-                          {getStockForSize(item) === 0 && (
-                            <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: '800', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ef4444', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              AGOTADO
-                            </span>
-                          )}
-                          {getStockForSize(item) > 0 && item.quantity > getStockForSize(item) && (
-                            <span style={{ fontSize: '10px', color: '#FFC107', fontWeight: '800', backgroundColor: 'rgba(255, 193, 7, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #FFC107', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              SOLO {getStockForSize(item)} DISP.
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Selector de cantidad - pill redondeado más delgado */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(245,200,27,0.4)', borderRadius: '6px', padding: '1px', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
+                      {/* Bloque Controles Cantidad */}
+                      <div className="gm-cart-item-controls-block">
+                        <div className="gm-cart-qty-stepper">
                           <button 
+                            className="gm-cart-qty-btn"
                             onClick={() => {
                               if ((item.quantity || 0) <= 0) return;
                               const key = `${item.id}_${item.talla}`;
@@ -393,30 +370,28 @@ const Cart = () => {
                               setQuantityDisplays(prev => ({ ...prev, [key]: String(newQty) }));
                             }} 
                             disabled={(item.quantity || 0) <= 0}
-                            style={{ width: '20px', height: '20px', borderRadius: '4px', background: 'transparent', border: 'none', color: (item.quantity || 0) <= 0 ? '#444' : '#F5C81B', cursor: (item.quantity || 0) <= 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <FaMinus size={7} />
+                            <FaMinus size={8} />
                           </button>
                           <input 
                             type="number"
+                            className="gm-cart-qty-input"
                             value={quantityDisplays[`${item.id}_${item.talla}`] ?? (item.quantity === 0 ? '' : item.quantity)}
                             onChange={(e) => {
                               const key = `${item.id}_${item.talla}`;
                               const raw = e.target.value;
-                              // Actualizar solo el display local, sin tocar el carrito todavía
                               setQuantityDisplays(prev => ({ ...prev, [key]: raw }));
                             }}
                             onBlur={(e) => {
                               const key = `${item.id}_${item.talla}`;
                               const parsed = parseInt(e.target.value);
                               const finalQty = isNaN(parsed) ? 0 : Math.max(0, parsed);
-                              // Ahora sí actualizamos el carrito
                               handleManualQuantity(item.id, item.talla, String(finalQty));
                               setQuantityDisplays(prev => ({ ...prev, [key]: finalQty === 0 ? '' : String(finalQty) }));
                             }}
-                            style={{ width: '38px', border: 'none', background: 'transparent', color: '#fff', textAlign: 'center', fontSize: '11px', fontWeight: '600', outline: 'none' }}
                           />
                           <button 
+                            className="gm-cart-qty-btn"
                             onClick={() => {
                               const key = `${item.id}_${item.talla}`;
                               const newQty = (item.quantity || 0) + 1;
@@ -424,42 +399,32 @@ const Cart = () => {
                               setQuantityDisplays(prev => ({ ...prev, [key]: String(Math.min(newQty, getStockForSize(item))) }));
                             }} 
                             disabled={item.quantity >= getStockForSize(item)}
-                            style={{ width: '20px', height: '20px', borderRadius: '4px', background: 'transparent', border: 'none', color: item.quantity >= getStockForSize(item) ? '#333' : '#F5C81B', cursor: item.quantity >= getStockForSize(item) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <FaPlus size={7} />
+                            <FaPlus size={8} />
                           </button>
                         </div>
-                        {/* 🔥 STOCK DISPONIBLE (Solo si es bajo o se alcanza) */}
                         {item.quantity >= getStockForSize(item) && (
-                          <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: '600' }}>
-                            Hay {getStockForSize(item)} disp.
-                          </span>
-                        )}
-
-                        {/* ⚠️ ERROR DE CANTIDAD INLINE */}
-                        {isQtyZero && showErrors && (
-                          <span style={{ color: '#ef4444', fontSize: '9px', fontWeight: 'bold', marginTop: '2px', textAlign: 'center' }}>
-                            ⚠️ Selecciona cantidad
-                          </span>
+                          <span className="gm-cart-max-label">Máx</span>
                         )}
                       </div>
 
-                      {/* Precio */}
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: '10px', color: 'rgba(245,200,27,0.6)', fontWeight: '600' }}>
-                          ${Math.round(getPriceInfo(item).currentPrice).toLocaleString()} c/u
-                        </div>
-                        <div style={{ fontSize: '14px', color: '#F5C81B', fontWeight: '700' }}>
+                      {/* Bloque Precio */}
+                      <div className="gm-cart-item-price-block">
+                        <div className="gm-cart-total-price">
                           ${(Math.round(getPriceInfo(item).currentPrice) * (item.quantity || 1)).toLocaleString()}
                         </div>
+                        <div className="gm-cart-unit-price">
+                          ${Math.round(getPriceInfo(item).currentPrice).toLocaleString()} c/u
+                        </div>
                       </div>
 
-                      {/* Eliminar */}
+                      {/* Bloque Eliminar */}
                       <button 
+                        className="gm-cart-remove-btn"
                         onClick={() => handleRemoveFromCart(item.id, item.talla, productName)} 
-                        style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', cursor: 'pointer', padding: '8px', borderRadius: '8px', display: 'flex', flexShrink: 0 }}
+                        title="Eliminar"
                       >
-                        <FaTrash size={13} />
+                        <FaTrash size={14} />
                       </button>
                     </div>
                   </div>

@@ -248,6 +248,20 @@ const Home = () => {
     if (initialProducts.length > 0) {
       const inv = buildInitialInventoryFromProducts(initialProducts);
       setInventory(inv);
+
+      // 🔗 AUTO-ABRIR MODAL DESDE URL (?producto=ID) en Home
+      const params = new URLSearchParams(window.location.search);
+      const prodId = params.get('producto');
+      if (prodId) {
+        const found = initialProducts.find(p => String(p.id) === String(prodId));
+        if (found) {
+          setSelectedProduct(found);
+          setModalImgIndex(0);
+          setSelectedSize(null);
+          setQuantity(1);
+          setShowSizeError(false);
+        }
+      }
     }
   }, [initialProducts]);
 
@@ -295,12 +309,15 @@ const Home = () => {
     const normalize = (str) =>
       (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const query = normalize(searchTerm);
+    const cleanIdQuery = query.replace('#', '');
+    
     return initialProducts.filter((p) => {
       if (!p.isActive || p.stock <= 0) return false;
       return (
         normalize(p.nombre).includes(query) ||
         normalize(p.categoria).includes(query) ||
-        (p.descripcion && normalize(p.descripcion).includes(query))
+        (p.descripcion && normalize(p.descripcion).includes(query)) ||
+        String(p.id).includes(cleanIdQuery)
       );
     });
   }, [searchTerm, initialProducts]);

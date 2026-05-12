@@ -3,14 +3,8 @@
    Recibe información a través de 'props' y notifica eventos hacia arriba (a la Página principal). */
 
 import React from 'react';
-import { FaTimes, FaMinus, FaPlus, FaShoppingCart, FaBan, FaShareAlt, FaCheck, FaWhatsapp, FaFacebook, FaTwitter, FaLink, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaTimes, FaMinus, FaPlus, FaShoppingCart, FaBan, FaShareAlt, FaCheck, FaWhatsapp, FaFacebook, FaTwitter, FaLink, FaChevronLeft, FaChevronRight, FaRegCopy } from 'react-icons/fa';
 import '../styles/ProductModal.css';
-
-// Helper: determina si un color es "claro" para usar texto oscuro
-const isLightColor = (colorName) => {
-  const lightColors = ['white', 'blanco', 'yellow', 'amarillo', 'beige', 'crema', 'cream', 'ivory', 'marfil', 'oro', 'gold', 'dorado', 'lime', 'cyan', 'aqua', 'silver', 'plata', 'celeste', 'lila', 'hueso', 'rosa', 'pink'];
-  return lightColors.includes(colorName.toLowerCase());
-};
 
 // Helper: mapea nombre de color a hex para background
 const colorNameToHex = (name) => {
@@ -34,7 +28,7 @@ const colorNameToHex = (name) => {
     hueso: '#f5f5dc',
     dorado: '#d4ac0d', gold: '#d4ac0d',
     plata: '#c0c0c0', silver: '#c0c0c0',
-    negro_alt: '#777777', // Color alternativo para visibilidad
+    negro_alt: '#777777', 
   };
   return map[name.toLowerCase()] || name.toLowerCase();
 };
@@ -60,10 +54,13 @@ const ProductModal = ({
     return [];
   }
 }) => {
-    const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
   const [showShareMenu, setShowShareMenu] = React.useState(false);
+  const [showFullDesc, setShowFullDesc] = React.useState(false);
+  const [copiedSKU, setCopiedSKU] = React.useState(false);
+  const [modalImgIndex, setModalImgIndex] = React.useState(0);
 
-    const handleShare = (e) => {
+  const handleShare = (e) => {
     if (e) e.stopPropagation();
     setShowShareMenu(!showShareMenu);
   };
@@ -79,19 +76,17 @@ const ProductModal = ({
   };
 
   const shareSocial = (platform) => {
-    const url = `${window.location.origin}/productos?producto=${product.id}`;
     const text = `¡Mira esta gorra en Gorras Medellín!: ${product.nombre}`;
+    const url = `${window.location.origin}/productos?producto=${product.id}`;
     let shareUrl = '';
-    if (platform === 'whatsapp') shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`;
+    if (platform === 'whatsapp') shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + '\n' + url)}`;
     if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
     if (platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(shareUrl, '_blank');
     setShowShareMenu(false);
   };
 
-const [modalImgIndex, setModalImgIndex] = React.useState(0);
-
-    const nextImage = (e) => {
+  const nextImage = (e) => {
     e.stopPropagation();
     setModalImgIndex((prev) => (prev + 1) % images.length);
   };
@@ -100,7 +95,7 @@ const [modalImgIndex, setModalImgIndex] = React.useState(0);
     setModalImgIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-React.useEffect(() => {
+  React.useEffect(() => {
     if (product) {
       document.body.style.overflow = "hidden";
     }
@@ -110,13 +105,13 @@ React.useEffect(() => {
   }, [product]);
 
   if (!product) return null;
+  const displayRef = product.id_producto_ref || String(product.id).padStart(6, '0');
   const images = Array.isArray(product.imagenes) && product.imagenes.filter(Boolean).length
     ? product.imagenes.filter(Boolean).map(x => String(x).trim()).filter(Boolean)
     : [safeImg(product)];
 
   const sizes = normalizeSizes(product);
 
-  // Stock logic
   const getAvailableFor = (inv, productId, size) => {
     if (inv) {
       const pid = String(productId);
@@ -140,12 +135,6 @@ React.useEffect(() => {
 
   const remaining = selectedSize ? getAvailableFor(inventory, product.id, selectedSize) : 0;
 
-  const getStockColor = (count) => {
-    if (count >= 20) return '#10b981';
-    if (count >= 10) return '#f59e0b';
-    return '#ef4444';
-  };
-
   const isAgotado = Number(product.stock) === 0;
   const isOffer = (product.hasDiscount || product.has_discount || product.oferta) && product.precioOferta;
 
@@ -153,14 +142,15 @@ React.useEffect(() => {
     const q = parseInt(qty) || 0;
     if (q >= 80 && parseFloat(prod.precioMayorista80) > 0) return prod.precioMayorista80;
     if (q >= 6 && parseFloat(prod.precioMayorista6) > 0) return prod.precioMayorista6;
-    return isOffer ? prod.precioOferta : prod.precio;
+    return isOffer ? prod.precioOferta : (prod.precioVenta || prod.precio);
   };
 
   const currentPrice = getWholesalePrice(quantity, product);
 
   return (
-    <div className="gm-modal-overlay">
+    <div className="gm-modal-overlay" onClick={(e) => e.stopPropagation()}>
       <div className="gm-modal" onClick={(e) => e.stopPropagation()}>
+        {/* Botón compartir */}
         <div 
           className={`gm-share-btn ${showShareMenu ? 'active' : ''}`} 
           onClick={handleShare}
@@ -191,6 +181,8 @@ React.useEffect(() => {
             </div>
           )}
         </div>
+        
+        {/* Botón cerrar */}
         <button className="gm-modal-close" onClick={closeModal} type="button">
           <FaTimes size={18} />
         </button>
@@ -228,10 +220,13 @@ React.useEffect(() => {
         {/* RIGHT: INFO */}
         <div className="gm-modal-right">
           <div className="gm-modal-right-content">
-            {/* 1. Category + Title + Color Chips */}
-            <div className="gm-modal-title-colors" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <h2 className="gm-modal-title" style={{ margin: 0 }}>{product.nombre}</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {/* 1. Title + Color Chips */}
+            <div className="gm-modal-title-colors" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <h2 className="gm-modal-title" style={{ margin: 0, fontSize: '1.3rem', color: isOffer ? '#fff' : '#F5C81B' }}>
+                {product.nombre}
+              </h2>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
                 {product.colores && product.colores.filter(Boolean).length > 0 && (
                   <div className="gm-modal-colors-inline" style={{ marginTop: 0 }}>
                     {product.colores.filter(Boolean).map((c, idx) => {
@@ -252,22 +247,25 @@ React.useEffect(() => {
                     })}
                   </div>
                 )}
-                {(product.categoria || product.Categoria || product.category) && (
-                  <span style={{
-                    display: 'inline-block',
-                    backgroundColor: 'rgba(255,193,7,0.12)',
-                    color: '#FFC107',
-                    border: '1px solid rgba(255,193,7,0.35)',
-                    borderRadius: '20px',
-                    padding: '2px 10px',
-                    fontSize: '10px',
-                    fontWeight: '800',
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase'
-                  }}>
-                    🏷 {product.categoria || product.Categoria || product.category}
-                  </span>
-                )}
+
+                <span className="gm-modal-category-badge" style={{ marginLeft: product.colores && product.colores.filter(Boolean).length ? '6px' : '0' }}>
+                  {product.categoria || product.Categoria || product.category}
+                </span>
+
+                <div
+                  className="gm-product-sku-inline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(displayRef);
+                    setCopiedSKU(true);
+                    setTimeout(() => setCopiedSKU(false), 2000);
+                  }}
+                  style={{ marginLeft: '8px' }}
+                >
+                  <span>Ref: #{displayRef}</span>
+                  <FaRegCopy style={{ fontSize: '11px' }} />
+                  {copiedSKU && <span style={{ fontSize: '10px' }}>¡Copiado!</span>}
+                </div>
               </div>
             </div>
 
@@ -280,61 +278,79 @@ React.useEffect(() => {
                 {isOffer && (
                   <div className="gm-original-price-row">
                     <span className="gm-original-price">
-                       Antes: ${Math.round(product.precio).toLocaleString('es-CO')}
+                       Antes: ${Math.round(product.precioVenta || product.precio).toLocaleString('es-CO')}
                     </span>
                     <span className="gm-discount-badge">
-                      {Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}% DCTO
+                      {Math.round((( (product.precioVenta || product.precio) - product.precioOferta) / (product.precioVenta || product.precio)) * 100)}% DCTO
                     </span>
                   </div>
                 )}
               </div>
+            </div>
+
+
+
+            {/* 3. Bulk Info Row */}
+            <div className="gm-modal-bulk-row">
               <div className="gm-modal-tags-inline">
                 {parseInt(quantity) >= 80 && parseFloat(product.precioMayorista80) > 0 ? (
-                  <span className="gm-tag gm-tag--destacado" style={{ backgroundColor: '#10b981', color: '#fff' }}>Mayorista 80+</span>
+                  <span className="gm-tag" style={{ backgroundColor: '#10b981', color: '#fff' }}>Mayorista 80+</span>
                 ) : parseInt(quantity) >= 6 && parseFloat(product.precioMayorista6) > 0 ? (
-                  <span className="gm-tag gm-tag--featured" style={{ backgroundColor: '#2a4a6f', color: '#fff' }}>Mayorista 6+</span>
+                  <span className="gm-tag" style={{ backgroundColor: '#2a4a6f', color: '#fff' }}>Mayorista 6+</span>
                 ) : null}
+              </div>
+              <div className="gm-bulk-info-box">
+                <span className="gm-bulk-info-text" style={{ fontSize: '0.74rem', fontWeight: 500, color: '#93c5fd', whiteSpace: 'nowrap' }}>
+                  A partir de 6 unidades tienes descuento por mayor
+                </span>
               </div>
             </div>
 
-            {/* 3. Bulk Info */}
-            <div className="gm-bulk-info-box">
-              <span className="gm-bulk-info-text">A partir de 6 unidades tienes descuento por mayor</span>
-            </div>
-
             {/* 4. Description */}
-            <div className="gm-modal-desc-box">
-              <p className="gm-modal-description">
-                {product.descripcion || "Sin descripción disponible."}
-              </p>
+            <div className="gm-modal-desc-box-clean">
+              <div className="gm-desc-wrapper" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                <p className={`gm-modal-description ${showFullDesc ? 'is-expanded' : 'is-collapsed'}`} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.78rem', lineHeight: '1.4', flex: 1 }}>
+                  {product.descripcion || "Sin descripción disponible."}
+                </p>
+                {product.descripcion && product.descripcion.length > 140 && (
+                  <button 
+                    className="gm-ver-mas-btn" 
+                    onClick={() => setShowFullDesc(!showFullDesc)}
+                    type="button"
+                  >
+                    {showFullDesc ? '↑ ver menos' : '↓ ver más'}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* 5. Sizes */}
             {sizes.length > 0 && (
               <div className="gm-sizes">
                 <div className="gm-sizes-head">
-                  <span className="gm-sizes-label">Talla:</span>
+                  <span className="gm-sizes-label" style={{ fontSize: '12px' }}>Talla:</span>
                 </div>
                 <div className="gm-sizes-wrap">
                   {sizes.map((t) => {
-                  const ava = getAvailableFor(inventory, product.id, t);
-                  const isOutOfStock = Number(product.stock) === 0;
-                  const disabled = ava <= 0 || isOutOfStock;
-                  const isSelected = selectedSize === t;
-                  return (
-                    <div key={t} className="gm-size-chip-container">
-                      {!disabled && <div className="gm-size-tooltip">disponible: {ava}</div>}
-                      {disabled && <div className="gm-size-tooltip">{isOutOfStock ? "agotado" : "talla agotada"}</div>}
-                      <button
-                        type="button"
-                        className={`gm-size-chip ${disabled ? "is-disabled" : ""} ${isSelected ? "is-selected" : ""}`}
-                        onClick={() => !disabled && handleSizeSelect(t)}
-                      >
-                        {t}
-                      </button>
-                    </div>
-                  );
-                })}
+                    const ava = getAvailableFor(inventory, product.id, t);
+                    const isOutOfStock = Number(product.stock) === 0;
+                    const disabled = ava <= 0 || isOutOfStock;
+                    const isSelected = selectedSize === t;
+                    return (
+                      <div key={t} className="gm-size-chip-container">
+                        {!disabled && <div className="gm-size-tooltip">disponible: {ava}</div>}
+                        {disabled && <div className="gm-size-tooltip">{isOutOfStock ? "agotado" : "talla agotada"}</div>}
+                        <button
+                          type="button"
+                          className={`gm-size-chip ${disabled ? "is-disabled" : ""} ${isSelected ? "is-selected" : ""}`}
+                          onClick={() => !disabled && handleSizeSelect(t)}
+                          style={{ fontSize: '12px' }}
+                        >
+                          {t}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
                 {showSizeError && (
                   <div className="gm-size-error-msg">⚠️ Debes seleccionar una talla primero</div>
@@ -347,7 +363,7 @@ React.useEffect(() => {
               <div className="gm-quantity-label">Cantidad:</div>
               <div className="gm-quantity-row">
                 <div className="gm-quantity-controls">
-                  <button className="gm-qty-btn" onClick={decrementQuantity} disabled={Number(product.stock) === 0 || parseInt(quantity) <= 0} type="button">
+                  <button className="gm-qty-btn" onClick={decrementQuantity} disabled={Number(product.stock) === 0 || parseInt(quantity) <= 0} type="button" title="Disminuir">
                     <FaMinus size={10} />
                   </button>
                   <input
@@ -363,12 +379,12 @@ React.useEffect(() => {
                     disabled={Number(product.stock) === 0}
                     onFocus={(e) => setTimeout(() => e.target.select(), 10)}
                   />
-                  <button className="gm-qty-btn" onClick={incrementQuantity} disabled={Number(product.stock) === 0 || (selectedSize && parseInt(quantity) >= remaining)} type="button">
+                  <button className="gm-qty-btn" onClick={incrementQuantity} disabled={Number(product.stock) === 0 || (selectedSize && parseInt(quantity) >= remaining)} type="button" title="Aumentar">
                     <FaPlus size={10} />
                   </button>
                 </div>
-                {selectedSize && parseInt(quantity) >= remaining && (
-                  <span className="gm-stock-badge" style={{ color: getStockColor(remaining), borderColor: `${getStockColor(remaining)}44`, backgroundColor: `${getStockColor(remaining)}11` }}>
+                {selectedSize && parseInt(quantity) >= remaining && remaining > 0 && (
+                  <span className="gm-stock-badge" style={{ fontSize: '10px' }}>
                     {remaining} RESTANTES
                   </span>
                 )}
@@ -382,9 +398,9 @@ React.useEffect(() => {
               disabled={Number(product.stock) === 0}
             >
               {Number(product.stock) === 0 ? (
-                <><FaBan size={18} className="gm-btn-icon" /> <span className="gm-btn-label-desktop">agotado</span><span className="gm-btn-label-mobile">agotado</span></>
+                <><FaBan size={18} className="gm-btn-icon" /> <span>agotado</span></>
               ) : (
-                <><FaShoppingCart size={18} className="gm-btn-icon" /> <span className="gm-btn-label-desktop">añadir al carrito</span><span className="gm-btn-label-mobile">añadir</span></>
+                <><FaShoppingCart size={18} className="gm-btn-icon" /> <span>añadir al carrito</span></>
               )}
             </button>
           </div>

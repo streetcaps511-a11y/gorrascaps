@@ -15,7 +15,7 @@ import api from "../../../shared/services/api";
 
 export const mapCompraData = (o) => ({
   id: o.IdCompra || o.id,
-  numCompra: o.IdCompra || o.id,
+  numCompra: o.noCompra || o.NoCompra || (o.IdCompra || o.id) + 99,
   proveedor: o.proveedorData?.companyName || o.proveedor || (o.Proveedor ? o.Proveedor.Nombre : ''),
   fecha: (o.Fecha || o.fecha) ? new Date(o.Fecha || o.fecha).toLocaleDateString('es-CO') : '',
   total: parseFloat(o.Total || o.total || 0),

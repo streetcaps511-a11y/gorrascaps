@@ -271,10 +271,16 @@ const devolucionController = {
                 evidencia2: evidencia2Url || evidencia2 || null
             }, { transaction });
 
+            // 🔥 ASIGNAR NO. DEVOLUCIÓN SECUENCIAL (PRO) - Inicia en 10001
+            const noDev = String(10000 + nueva.id);
+            await nueva.update({ noDevolucion: noDev }, { transaction });
+
             // 🔥 Si es Admin, descontar stock de cambio inmediatamente
             if (isAdmin && (nueva.idProductoCambio || nueva.productoCambio)) {
                 await decreaseProductStock(nueva, transaction);
             }
+
+            await nueva.update({ noDevolucion: String(99 + nueva.id) }, { transaction });
 
             await transaction.commit();
             res.status(201).json({ success: true, data: nueva });
@@ -382,7 +388,7 @@ const devolucionController = {
                     {
                         model: Venta,
                         as: 'ventaOriginal',
-                        attributes: ['id'],
+                        attributes: ['id', 'noVenta'],
                         include: [
                             {
                                 model: DetalleVenta,

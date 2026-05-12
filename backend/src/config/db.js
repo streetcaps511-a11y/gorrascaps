@@ -30,13 +30,25 @@ export const sequelize = new Sequelize(
 console.log('⚡ Inicializando Sequelize para Aiven...');
 
 export const connectDB = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Conexión a PostgreSQL (Aiven) establecida correctamente.');
-  } catch (error) {
-    console.error('❌ Error fatal al conectar con la base de datos:', error.message);
-    // No salimos del proceso aquí para permitir que server.js maneje el reintento o cierre
-    throw error;
+  const maxRetries = 5;
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      await sequelize.authenticate();
+      console.log('✅ Conexión a PostgreSQL (Aiven) establecida correctamente.');
+      return;
+    } catch (error) {
+      attempt += 1;
+      const waitMs = Math.min(16000, 1000 * Math.pow(2, attempt - 1));
+      console.error(`❌ Intento ${attempt}/${maxRetries} - Error al conectar con la base de datos: ${error.message}`);
+      if (attempt >= maxRetries) {
+        console.error('❌ Número máximo de reintentos alcanzado.');
+        throw error;
+      }
+      console.log(`➡️ Reintentando en ${waitMs} ms...`);
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((res) => setTimeout(res, waitMs));
+    }
   }
 };
 

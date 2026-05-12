@@ -13,7 +13,13 @@ const Producto = sequelize.define('Producto', {
         autoIncrement: true,
         allowNull: false,
         field: 'IdProducto',
-        comment: 'Identificador único del producto'
+        comment: 'Identificador único interno del producto'
+    },
+    id_producto_ref: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        field: 'IdProductoRef',
+        comment: 'ID de producto numérico largo (referencia personalizada)'
     },
     nombre: {
         type: DataTypes.STRING(200),

@@ -212,7 +212,7 @@ const OrdersSection = ({
     if (!selectedOrder) return;
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const invoiceNumber = selectedOrder.id.replace('PED-', '');
+    const invoiceNumber = String(selectedOrder.id).replace('PED-', '');
     const date = selectedOrder.date;
     
     // Group items by name to avoid repeating name for multiple sizes
@@ -478,7 +478,7 @@ const OrdersSection = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               {selectedOrder.statusenvio === 'Enviado' && String(selectedOrder.status).toUpperCase() === 'COMPLETADA' && (
                 <button 
-                  onClick={() => handleMarkAsReceived(selectedOrder.id)}
+                  onClick={() => handleMarkAsReceived(selectedOrder.dbId || selectedOrder.id)}
                   className="gm-btn-confirm-delivery-neon"
                   style={{
                     padding: '8px 24px',

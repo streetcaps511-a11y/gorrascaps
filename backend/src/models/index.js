@@ -95,7 +95,8 @@ DetalleVenta.belongsTo(Producto, { foreignKey: 'idProducto', as: 'producto' });
 // ──────────────────────────────────────────────────────────
 Devolucion.belongsTo(Producto, { foreignKey: 'idProducto', as: 'productoInfo' });
 Devolucion.belongsTo(Venta, { foreignKey: 'idVenta', as: 'ventaOriginal' });
-Devolucion.belongsTo(Estado, { foreignKey: 'idEstado', as: 'estadoDevolucion' });
+// Devolución ya NO usa FK a Estado — IdEstado ahora es un STRING con el nombre del estado
+// Devolucion.belongsTo(Estado, { foreignKey: 'idEstado', as: 'estadoDevolucion' });
 
 // ============================================
 // ✅ EXPORTAR

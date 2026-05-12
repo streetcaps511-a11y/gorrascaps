@@ -1,54 +1,31 @@
 
-import { sequelize, Venta, Cliente, Compra, Producto, Usuario } from '../src/models/index.js';
-import { connectDB } from '../src/config/db.js';
+import { sequelize } from '../src/config/db.js';
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-const check = async () => {
+async function check() {
   try {
-    await connectDB();
-    const ventasCount = await Venta.count();
-    const clientesCount = await Cliente.count();
-    const comprasCount = await Compra.count();
-    const productosCount = await Producto.count();
-    
-    console.log('--- DATABASE STATS ---');
-    console.log('Ventas:', ventasCount);
-    console.log('Clientes:', clientesCount);
-    console.log('Compras:', comprasCount);
-    console.log('Productos:', productosCount);
-    
-    if (ventasCount > 0) {
-      const lastVenta = await Venta.findOne({ order: [['id', 'DESC']] });
-      console.log('Last Venta:', JSON.stringify(lastVenta, null, 2));
+    console.log('--- DB CHECK ---');
+    const [tables] = await sequelize.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+    console.log('Tables found:', tables.map(t => t.table_name));
+
+    const targetTables = ['Ventas', 'Compras', 'Devoluciones'];
+    for (const t of targetTables) {
+      console.log(`Checking table: ${t}`);
+      const [cols] = await sequelize.query(`SELECT column_name FROM information_schema.columns WHERE table_name = '${t}'`);
+      console.log(`Columns in ${t}:`, cols.map(c => c.column_name));
+      
+      if (t === 'Ventas') {
+          const [data] = await sequelize.query(`SELECT "IdVenta", "NoVenta" FROM "Ventas" LIMIT 5`);
+          console.log(`Data in Ventas (first 5):`, data);
+      }
     }
-
-    const allUsers = await Usuario.findAll({ include: ['rolData'] });
-    console.log('--- ALL USERS ---');
-    allUsers.forEach(u => {
-      console.log(`- ${u.id}: ${u.email} (Rol: ${u.rolData?.nombre}, IDRol: ${u.idRol})`);
-    });
-    
-    const totalSum = await Venta.sum('total');
-    console.log('--- SUM TEST ---');
-    console.log('Total Sum (Venta.sum("total")):', totalSum);
-    
-    const safeSumNoDefault = async (model, col, where) => { 
-        try { 
-            const result = await model.sum(col, { where }) || 0; 
-            return Number(result);
-        } catch (e) { 
-            console.error(`Error sumando ${col}:`, e);
-            return 0; 
-        } 
-    };
-    
-    const totalSafeNoDefault = await safeSumNoDefault(Venta, 'total');
-    console.log('Total Safe (No Default):', totalSafeNoDefault);
-
+  } catch (err) {
+    console.error('Error:', err);
+  } finally {
     process.exit(0);
-  } catch (error) {
-    console.error('Error:', error);
-    process.exit(1);
   }
-};
+}
 
 check();

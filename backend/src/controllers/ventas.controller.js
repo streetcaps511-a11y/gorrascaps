@@ -16,6 +16,7 @@ import {
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cloudinary from '../config/cloudinary.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -284,10 +285,19 @@ const ventaController = {
                     
                     const filePath = path.join(dir, fileName);
                     fs.writeFileSync(filePath, base64Data, 'base64');
-                    comprobanteUrl = `/uploads/comprobantes/${fileName}`;
-                    console.log('✅ Comprobante guardado:', comprobanteUrl);
+                    console.log('✅ Comprobante guardado localmente como respaldo');
+
+                    // ☁️ SUBIR A CLOUDINARY (Prioridad para la Base de Datos)
+                    const cloudResult = await cloudinary.uploader.upload(req.body.comprobante, {
+                        folder: 'comprobantes',
+                        public_id: fileName.split('.')[0],
+                        resource_type: 'auto'
+                    });
+
+                    comprobanteUrl = cloudResult.secure_url;
+                    console.log('☁️ Comprobante subido a Cloudinary:', comprobanteUrl);
                 } catch (err) {
-                    console.error('❌ Error guardando comprobante:', err);
+                    console.error('❌ Error guardando comprobante (Local/Cloudinary):', err);
                 }
             }
 
@@ -312,8 +322,9 @@ const ventaController = {
                 comprobante: comprobanteUrl
             }, { transaction });
 
-            // 🔥 ASIGNAR NO. VENTA AL REGISTRO RECIÉN CREADO
-            await nuevaVentaObj.update({ noVenta: String(nuevaVentaObj.id) }, { transaction });
+            // 🔥 ASIGNAR NO. VENTA SECUENCIAL (PRO) - Inicia en 1001
+            const noVenta = String(1000 + nuevaVentaObj.id);
+            await nuevaVentaObj.update({ noVenta }, { transaction });
 
             for (const d of detallesData) {
                 // 1. Crear el detalle de la venta con el NoVenta vinculado
@@ -542,10 +553,19 @@ const ventaController = {
                     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
                     const filePath = path.join(dir, fileName);
                     fs.writeFileSync(filePath, base64Data, 'base64');
-                    comprobante2Url = `/uploads/comprobantes/${fileName}`;
-                    console.log('✅ Segundo comprobante guardado:', comprobante2Url);
+                    console.log('✅ Segundo comprobante guardado localmente como respaldo');
+
+                    // ☁️ SUBIR A CLOUDINARY
+                    const cloudResult = await cloudinary.uploader.upload(comprobante2, {
+                        folder: 'comprobantes',
+                        public_id: fileName.split('.')[0],
+                        resource_type: 'auto'
+                    });
+
+                    comprobante2Url = cloudResult.secure_url;
+                    console.log('☁️ Segundo comprobante subido a Cloudinary:', comprobante2Url);
                 } catch (err) {
-                    console.error('❌ Error guardando segundo comprobante:', err);
+                    console.error('❌ Error guardando segundo comprobante (Local/Cloudinary):', err);
                 }
             } else if (comprobante2 === null) {
                 comprobante2Url = null;

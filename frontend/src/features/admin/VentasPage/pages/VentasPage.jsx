@@ -84,8 +84,8 @@ const VentasPage = () => {
   const columns = [
     { 
       header: 'No. Venta', 
-      field: 'id', 
-      render: (item) => <span className="sale-id-text">{item.id}</span> 
+      field: 'noVenta', 
+      render: (item) => <span className="sale-id-text">{item.noVenta}</span> 
     },
     { 
       header: 'Cliente', 
@@ -213,7 +213,7 @@ const VentasPage = () => {
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`COMPROBANTE DE VENTA No. ${saleId}`, 105, 28, { align: 'center' });
+    doc.text(`COMPROBANTE DE VENTA No. ${ventaViendo.noVenta}`, 105, 28, { align: 'center' });
     doc.text(`Fecha: ${date}`, 105, 33, { align: 'center' });
 
     // Client Info

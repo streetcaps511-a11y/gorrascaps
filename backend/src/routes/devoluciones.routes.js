@@ -25,11 +25,14 @@ router.get('/producto/:productoId', checkPermission('ver_devoluciones'), devoluc
 router.get('/', checkPermission('ver_devoluciones'), devolucionController.getAllDevoluciones);
 router.get('/:id', checkPermission('ver_devoluciones'), devolucionController.getDevolucionById);
 
-// Permitir crear a admin con permiso o a cualquier Cliente autenticado
+// Permitir crear a admin con permiso o a cualquier Cliente/Usuario autenticado
 router.post('/', (req, res, next) => {
-    if (req.rol?.nombre === 'Cliente' || req.rol?.nombre === 'Usuario') {
+    const rolName = String(req.rol?.nombre || '').toLowerCase();
+    // Clientes y usuarios normales pueden crear devoluciones directamente
+    if (rolName.includes('cliente') || rolName.includes('usuario')) {
         return next();
     }
+    // Admins y otros roles requieren el permiso específico
     return checkPermission('crear_devoluciones')(req, res, next);
 }, devolucionController.createDevolucion);
 

@@ -29,7 +29,7 @@ export const mapDevolucionData = (d) => {
 
   return {
     id: d.id || d.IdDevolucion || '',
-    numDevolucion: d.id || d.IdDevolucion || '',
+    numDevolucion: d.noDevolucion || d.NoDevolucion || (d.id || d.IdDevolucion) + 99,
     cliente: d.nombreCliente || d.ventaOriginal?.clienteData?.nombreCompleto || d.ventaOriginal?.clienteData?.Nombre || 'Cliente',
     direccion: d.ventaOriginal?.direccionEnvio || 'No especificada',
     idCliente: d.idCliente || d.ventaOriginal?.clienteData?.id || null,

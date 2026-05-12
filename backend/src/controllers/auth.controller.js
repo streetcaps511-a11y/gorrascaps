@@ -251,6 +251,13 @@ const authController = {
                 userJSON.direccion = user.clienteData.direccion;
                 userJSON.ciudad = user.clienteData.ciudad;
                 userJSON.departamento = user.clienteData.departamento;
+                userJSON.telefono = user.clienteData.telefono || user.telefono;
+                userJSON.tipoDocumento = user.clienteData.tipoDocumento || user.tipoDocumento;
+                userJSON.numeroDocumento = user.clienteData.numeroDocumento || user.numeroDocumento;
+            } else {
+                userJSON.telefono = user.telefono;
+                userJSON.tipoDocumento = user.tipoDocumento;
+                userJSON.numeroDocumento = user.numeroDocumento;
             }
 
             // 🔐 UNIFICACIÓN DE PERMISOS (Formato de texto para el Frontend)
@@ -347,6 +354,13 @@ const authController = {
                 if (user.clienteData.direccion) userJSON.direccion = user.clienteData.direccion;
                 if (user.clienteData.ciudad) userJSON.ciudad = user.clienteData.ciudad;
                 if (user.clienteData.departamento) userJSON.departamento = user.clienteData.departamento;
+                userJSON.telefono = user.clienteData.telefono || user.telefono;
+                userJSON.tipoDocumento = user.clienteData.tipoDocumento || user.tipoDocumento;
+                userJSON.numeroDocumento = user.clienteData.numeroDocumento || user.numeroDocumento;
+            } else {
+                userJSON.telefono = user.telefono;
+                userJSON.tipoDocumento = user.tipoDocumento;
+                userJSON.numeroDocumento = user.numeroDocumento;
             }
 
             // Asegurar que el nombre del rol esté disponible directamente

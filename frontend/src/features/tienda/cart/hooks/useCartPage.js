@@ -42,16 +42,21 @@ export const useCartPage = () => {
   
   const navigate = useNavigate();
 
-  // Asegurar que se pre-llene si el usuario se carga después del montaje
+  // Asegurar que se pre-llene si el usuario se carga después del montaje o cambia
   useEffect(() => {
     if (user) {
-      setDeliveryAddress(prev => prev || user.Direccion || user.direccion || user.address || '');
-      setDeliveryPhone(prev => prev || user.Telefono || user.telefono || user.telefono_db || user.phone || '');
+      const addr = user.direccion || user.Direccion || user.address || '';
+      const phone = user.telefono || user.Telefono || user.telefono_db || user.phone || '';
       
-      // Si todavía faltan datos, intentar buscar el perfil completo
+      // Solo sobreescribir si el campo actual está vacío para no borrar lo que el usuario haya escrito manualmente
+      setDeliveryAddress(prev => prev || addr);
+      setDeliveryPhone(prev => prev || phone);
+      
+      // Si todavía faltan datos críticos, intentar buscar el perfil completo desde la API
       const fetchProfile = async () => {
         try {
-          const perfil = await profileApi.getMiPerfil();
+          const response = await profileApi.getMiPerfil();
+          const perfil = response?.data || response;
           if (perfil) {
             const pData = Array.isArray(perfil) ? perfil[0] : perfil;
             setDeliveryAddress(prev => prev || pData.direccion || pData.Direccion || pData.address || '');
@@ -62,7 +67,9 @@ export const useCartPage = () => {
         }
       };
       
-      fetchProfile();
+      if (!addr || !phone) {
+        fetchProfile();
+      }
     }
   }, [user]);
 

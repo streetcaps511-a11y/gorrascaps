@@ -246,9 +246,9 @@ const ReturnsSection = ({
               <FaArrowLeft />
             </button>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <h3 className="gm-section-title" style={{ fontSize: '1.1rem', margin: 0 }}>Solicitud {selectedReturn.id}</h3>
-              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontFamily: '"Montserrat", sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Vinculada al pedido: {selectedReturn.orderId}
+              <h3 style={{ fontSize: '1.4rem', color: '#fff', fontWeight: '800', margin: 0, textTransform: 'none', fontFamily: '"Montserrat", sans-serif' }}>Detalle de devolución</h3>
+              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontFamily: '"Montserrat", sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px' }}>
+                Solicitud {selectedReturn.id} | Pedido: {selectedReturn.orderId}
               </span>
             </div>
           </div>
@@ -317,7 +317,8 @@ const ReturnsSection = ({
                     </span>
                     
                     <div className="gm-item-spec-info" style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', fontFamily: '"Outfit", sans-serif' }}>
-                      Talla: {i.size} <span style={{ margin: '0 10px', opacity: 0.15, color: 'rgba(255,255,255,0.3)' }}>|</span> Cantidad: {i.qty}
+                      Talla: {i.size} <span style={{ margin: '0 10px', opacity: 0.15, color: 'rgba(255,255,255,0.3)' }}>|</span> 
+                      Cantidad: {selectedReturn.pedidoCompleto ? <span style={{ color: '#4ADE80', fontWeight: 'bold' }}>Cantidad completa</span> : i.qty}
                     </div>
                   </div>
 

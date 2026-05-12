@@ -66,7 +66,7 @@ const DevolucionesPage = () => {
   }, [modoVista, devolucionViendo]);
 
   const columns = [
-    { header: 'N° de devolución', field: 'id', render: (item) => <span className="dev-id-text">{item.id}</span> },
+    { header: 'N° de devolución', field: 'numDevolucion', render: (item) => <span className="dev-id-text">{item.numDevolucion}</span> },
     { header: 'Cliente', field: 'cliente', render: (item) => <span className="dev-client-text">{item.cliente}</span> },
     { header: 'Producto Original', field: 'productoOriginal', render: (item) => <span className="dev-product-text">{item.productoOriginal}</span> },
     { header: 'Valor', field: 'precio', render: (item) => <span className="dev-price-text">${item.precio.toLocaleString()}</span> },

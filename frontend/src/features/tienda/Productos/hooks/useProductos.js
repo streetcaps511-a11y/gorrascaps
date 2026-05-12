@@ -220,13 +220,16 @@ export const useProductos = () => {
       const matchesSearch = queryWords.length === 0 || queryWords.every(word => {
         const pTallas = normalizeSizes(p).join(' ');
         const pColores = (Array.isArray(p.colores) ? p.colores : [p.colores || '']).join(' ');
+        const cleanWord = word.replace('#', '');
         
         return (
           normalize(p.nombre).includes(word) ||
           normalize(p.categoria).includes(word) ||
           normalize(p.descripcion).includes(word) ||
           normalize(pColores).includes(word) ||
-          normalize(pTallas).includes(word)
+          normalize(pTallas).includes(word) ||
+          String(p.id).includes(cleanWord) ||
+          (p.id_producto_ref && String(p.id_producto_ref).includes(cleanWord))
         );
       });
 

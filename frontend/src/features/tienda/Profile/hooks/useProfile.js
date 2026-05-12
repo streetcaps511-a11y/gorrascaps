@@ -8,8 +8,19 @@ import { useAuth } from "../../../shared/contexts";
 import * as profileApi from "../services/profileApi";
 import { NitroCache } from "../../../shared/utils/NitroCache";
 
+// 🎨 Mapa de colores constante para estados
+const STATUS_COLORS = {
+  'Aprobada': '#10b981',
+  'Completada': '#10b981',
+  'Rechazada': '#ef4444',
+  'Rechazado': '#ef4444',
+  'Anulado': '#6b7280',
+  'Anulada': '#6b7280',
+  'Pendiente': '#FFC107'
+};
+
 export const useProfile = () => {
-  const { user: authUser, logout: onLogout, isAdmin } = useAuth();
+  const { user: authUser, logout: onLogout, isAdmin, updateUser } = useAuth();
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [toast, setToast] = useState({ open: false, text: "" });
@@ -131,10 +142,27 @@ export const useProfile = () => {
       avatarUrl: avatarUrl || "",
     };
     
-    await profileApi.updateProfile(updatedUser);
-    setUser(updatedUser);
-    setIsEditing(false);
-    showTopToast("Cambios guardados correctamente.");
+    try {
+      const response = await profileApi.updateProfile(updatedUser);
+      
+      if (response.success) {
+        // Combinamos la respuesta del servidor con los datos locales para no perder nada
+        const latestUser = { 
+          ...updatedUser, 
+          ...(response.data || {}) 
+        };
+        
+        setUser(latestUser);
+        updateUser(latestUser); // 🚀 SINCRONIZACIÓN GLOBAL (AuthContext)
+        setIsEditing(false);
+        showTopToast("Cambios guardados correctamente.");
+      } else {
+        showTopToast(response.message || "Error al guardar los cambios.");
+      }
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      showTopToast("Error de conexión al guardar el perfil.");
+    }
   };
 
   const handleChange = (e) => {
@@ -243,7 +271,7 @@ export const useProfile = () => {
     if (!checkReturnPeriod(order)) return;
     
     // 🛡️ VERIFICAR SI YA EXISTE UNA DEVOLUCIÓN PARA ESTE PRODUCTO EN ESTA ORDEN
-    const hasReturn = allReturns.some(r => 
+    const hasReturn = (allReturns || []).some(r => 
       r.orderId === order.id && 
       String(r.productId) === String(product.id) && 
       !String(r.status).toLowerCase().includes('rechazad')
@@ -266,7 +294,7 @@ export const useProfile = () => {
     if (!checkReturnPeriod(order)) return;
 
     // 🛡️ VERIFICAR SI YA HAY DEVOLUCIONES PARA ESTA ORDEN
-    const hasReturn = allReturns.some(r => 
+    const hasReturn = (allReturns || []).some(r => 
       r.orderId === order.id && 
       !String(r.status).toLowerCase().includes('rechazad')
     );
@@ -342,10 +370,13 @@ export const useProfile = () => {
       message: "¿Deseas enviar tu solicitud de cambio ahora? Una vez enviada, el equipo de administración revisará la información y no podrás editarla.",
       confirmText: "ACEPTAR",
       onConfirm: async () => {
+        // 🔒 Cerrar modal inmediatamente para evitar doble click
+        setConfirmModal(prev => ({ ...prev, open: false }));
+
         try {
           const commonData = {
             idCliente: authUser.idCliente || authUser.IdCliente || authUser.id,
-            idVenta: Number(String(selectedProduct.orderId).replace('PED-', '')),
+            idVenta: Number(selectedProduct.dbOrderId || selectedProduct.orderId), // Usar ID real de la DB
             motivo: returnFormData.reason,
             evidencia: returnFormData.evidence,
             cantidad: isBulkReturn ? undefined : Number(returnFormData.cantidad || 1)
@@ -385,11 +416,19 @@ export const useProfile = () => {
             });
           }
 
+          // ✅ ÉXITO: Resetear formulario y mostrar toast bonito
+          setShowReturnForm(false);
+          setReturnView('list');
+          setReturnFormData({ replacementProductId: "", mismoModelo: false, evidence: null, reason: "", cantidad: 1 });
+          setReturnErrors({});
+          setSelectedProduct(null);
           setIsBulkReturn(false);
+          showTopToast("✅ ¡Solicitud de cambio enviada con éxito!");
           loadProfileData();
         } catch (err) {
           console.error("Error submitting return:", err);
-          showTopToast("No se pudo enviar la solicitud.");
+          const serverMsg = err.response?.data?.message || "No se pudo enviar la solicitud.";
+          showTopToast(serverMsg);
         }
       },
       onCancel: () => {
@@ -481,6 +520,7 @@ export const useProfile = () => {
     if (!silent && !hasLoadedReturns) setIsLoadingData(true);
     try {
       const returns = await profileApi.getMyReturns();
+      console.log("🔍 Returns recibidas del API:", returns);
       const mappedReturns = mapReturns(returns);
       setAllReturns(mappedReturns);
       NitroCache.set(CACHE_RETURNS, mappedReturns);
@@ -527,7 +567,18 @@ export const useProfile = () => {
     }));
   };
 
+  const getImageUrl = (raw) => {
+    if (!raw) return null;
+    if (typeof raw === 'string' && raw.startsWith('/uploads')) {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      return `${baseUrl}${raw}`;
+    }
+    return raw;
+  };
+
   const mapOrders = (orders) => {
+    if (!Array.isArray(orders)) return [];
+    
     const normalizeStatus = (order) => {
       const rawStatus = order.idEstado || order.IdEstado || order.estado || order.estadoVenta?.nombre || 'Pendiente';
       const lower = String(rawStatus).toLowerCase();
@@ -543,19 +594,12 @@ export const useProfile = () => {
       'Pendiente': '#FFC107'
     };
 
-    const getImageUrl = (raw) => {
-      if (!raw) return null;
-      if (typeof raw === 'string' && raw.startsWith('/uploads')) {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-        return `${baseUrl}${raw}`;
-      }
-      return raw;
-    };
-
     return orders.map(o => {
       const status = normalizeStatus(o);
       return {
-        id: `PED-${o.id}`,
+        id: o.noVenta || o.id,
+        dbId: o.id, // ID real para FKs
+        displayId: o.noVenta || o.id,
         date: new Date(o.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
         total: `$${Number(o.total || 0).toLocaleString('es-CO')}`,
         status,
@@ -570,7 +614,9 @@ export const useProfile = () => {
         monto2: o.monto2 || 0,
         rejectionReason: o.motivoRechazo || o.MotivoRechazo || null,
         items: (o.detalles || []).map(d => ({
-          id: d.idProducto || d.id,
+          dbId: d.idProducto || d.id,
+          orderId: o.noVenta || o.id,
+          dbOrderId: o.id, // ID real de la venta para FKs
           name: d.producto?.nombre || "Producto",
           price: `$${Number(d.precio || d.precioUnitario || d.producto?.precioVenta || 0).toLocaleString('es-CO')}`,
           size: d.talla || "U",
@@ -582,14 +628,7 @@ export const useProfile = () => {
   };
 
   const mapReturns = (returns) => {
-    const getImageUrl = (raw) => {
-      if (!raw) return null;
-      if (typeof raw === 'string' && raw.startsWith('/uploads')) {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-        return `${baseUrl}${raw}`;
-      }
-      return raw;
-    };
+    if (!Array.isArray(returns)) return [];
 
     return returns.map(r => {
       let statusName = r.idEstado || r.estado || "Pendiente";
@@ -603,26 +642,17 @@ export const useProfile = () => {
 
       const pImg = Array.isArray(r.productoInfo?.imagenes) ? r.productoInfo.imagenes[0] : null;
 
-      const colorMap = {
-        'Aprobada': '#10b981',
-        'Completada': '#10b981',
-        'Rechazada': '#ef4444',
-        'Rechazado': '#ef4444',
-        'Anulado': '#6b7280',
-        'Anulada': '#6b7280',
-        'Pendiente': '#FFC107'
-      };
-
       return {
-        id: `DEV-${r.id}`,
-        orderId: `PED-${r.idVenta}`,
-        rawOrderId: r.idVenta,
+        id: r.noDevolucion || r.id,
+        dbId: r.id,
+        orderId: r.ventaOriginal?.noVenta || r.idVenta,
+        dbOrderId: r.idVenta, // ID real para FKs
         productId: r.idProducto,
         size: r.talla || originalItem?.talla || "U",
         quantity: r.cantidad || originalItem?.cantidad || 1,
         date: new Date(r.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
         status: statusName,
-        statusColor: colorMap[statusName] || '#FFC107',
+        statusColor: STATUS_COLORS[statusName] || '#FFC107',
         productName: r.productoOriginal || r.nombreProductoOriginal || r.productoInfo?.nombre || "Producto",
         amount: `$${Number(r.precioUnitario || r.valor || 0).toLocaleString('es-CO')}`,
         reason: r.motivo || r.descripcion || "Cambio por talla",
@@ -699,7 +729,7 @@ export const useProfile = () => {
 
   const filteredOrders = useMemo(() => {
     const q = orderQuery.toLowerCase();
-    return allOrders.filter(o => {
+    return (allOrders || []).filter(o => {
       const matchQuery = o.id.toLowerCase().includes(q) || o.status.toLowerCase().includes(q);
       const matchStatus = orderStatus === 'Todos' || o.status === orderStatus;
       return matchQuery && matchStatus;
@@ -714,7 +744,7 @@ export const useProfile = () => {
     const grouped = [];
     const lotMap = new Map();
 
-    allReturns.forEach(r => {
+    (allReturns || []).forEach(r => {
       if (r.idLote) {
         if (!lotMap.has(r.idLote)) {
           lotMap.set(r.idLote, {
@@ -743,7 +773,7 @@ export const useProfile = () => {
 
   const filteredReturns = useMemo(() => {
     const q = returnQuery.toLowerCase();
-    return groupedReturns.filter(r => {
+    return (groupedReturns || []).filter(r => {
       const displayName = r.isLot ? "devolución de pedido" : r.productName;
       const matchQuery = r.id.toLowerCase().includes(q) || 
                          displayName.toLowerCase().includes(q) || 
@@ -773,6 +803,7 @@ export const useProfile = () => {
     handleEditClick, handleSaveClick, handleChange, getAvatarInitial, openFilePicker,
     onPickAvatar, removeAvatar, openImage, handleReturnClick, handleContinueToReturn,
     handleReturnImageUpload, handleReturnSubmit, getPriceNum, deactivateAccount, deleteAccount,
+    updateUser,
     handleMarkAsReceived,
     BULK_MIN_QTY: 6
   };

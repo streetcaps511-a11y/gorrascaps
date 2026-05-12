@@ -459,7 +459,7 @@ export const useDevolucionesLogic = () => {
     
     // 1. Filtrar primero por búsqueda y estado
     const initialFiltered = devoluciones.filter(d => {
-      const searchString = (d.cliente + d.id + d.productoOriginal).toLowerCase();
+      const searchString = (d.cliente + d.id + d.numDevolucion + d.productoOriginal).toLowerCase();
       const matchesSearch = searchString.includes(q);
       const matchesStatus = filterStatus === 'Todos' || d.estado === filterStatus;
       return matchesSearch && matchesStatus;

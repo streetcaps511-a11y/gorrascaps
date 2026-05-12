@@ -155,23 +155,17 @@
 }
 
 .gm-btn-confirm-p {
-  background: #10b981; /* Verde esmeralda de arriba solicitado */
-  color: #fff;
-  border: 1px solid #10b981;
-  white-space: nowrap; /* Una sola línea solicitado */
-}
-
-.gm-btn-confirm-p.danger {
-  background: #cc0000; /* ROJO ROJO, sin tintes rosas */
-  color: #fff;
-  border: none !important;
+  background: #FFC107; /* Amarillo solicitado */
+  color: #000; /* Texto negro para contraste */
+  border: 1px solid #FFC107;
 }
 
 .gm-btn-confirm-p:hover {
+  background: #e6b800; /* Amarillo más oscuro al hover */
+  color: #000;
   transform: translateY(-2px);
-  filter: brightness(0.9);
+  filter: brightness(0.95);
 }
-
 /* Success Modal */
 .gm-success-modal {
   background-color: #111827; 

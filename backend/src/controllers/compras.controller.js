@@ -171,6 +171,7 @@ const compraController = {
                 }, { transaction });
             }
 
+            await nuevaCompra.update({ noCompra: String(99 + nuevaCompra.id) }, { transaction });
             await transaction.commit();
             
             const resultado = await Compra.findByPk(nuevaCompra.id, {
