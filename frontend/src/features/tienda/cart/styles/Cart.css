@@ -1,0 +1,14 @@
+/* Estilos del componente Cart */
+
+.cart-badge-agotado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .cart-badge-agotado {
+    display: none !important;
+  }
+}
+
